@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>.brf to .edl</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 40px 20px;
+            max-width: 800px;
+            margin: 0 auto;
+            background: #f9fafb;
+            color: #111827;
+        }
+
+        h1 {
+            font-size: 2rem;
+            color: #111827;
+            margin-bottom: 0.5rem;
+            font-weight: 700;
+        }
+
+        p.description {
+            color: #4b5563;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .container {
+            background: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .radio-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .radio-group label {
+            display: flex;
+            align-items: center;
+            font-weight: normal;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .radio-group input[type="radio"] {
+            margin-right: 6px;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 12px;
+            font-size: 24px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            box-sizing: border-box;
+            resize: vertical;
+            transition: border-color 0.2s;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        button:active {
+            transform: translateY(1px);
+        }
+
+        .results-section {
+            margin-top: 30px;
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        @media (min-width: 768px) {
+            .results-section {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .result-box {
+            background: #f3f4f6;
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid #e5e7eb;
+        }
+
+        .result-box h3 {
+            margin-top: 0;
+            color: #374151;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #d1d5db;
+            padding-bottom: 8px;
+        }
+
+        pre {
+            margin: 0;
+            overflow: auto;
+            max-height: 300px;
+            font-size: 14px;
+            color: #1f2937;
+            display: none;
+            /* Hidden as no longer needed but kept for backward compatibility if ever accessed */
+        }
+
+        .canvas-wrapper {
+            overflow: auto;
+            max-width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            background: white;
+            border: 1px dashed #cbd5e1;
+            border-radius: 4px;
+            padding: 10px;
+        }
+
+        canvas {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+
+        .brf-upload-btn {
+            display: inline-block;
+            padding: 8px 16px;
+            background: #e5e7eb;
+            color: #374151;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 600;
+            transition: background-color 0.2s, background 0.2s;
+        }
+
+        .brf-upload-btn:hover {
+            background: #d1d5db;
+        }
+
+        .canvas-wrapper {
+            overflow: auto;
+            max-height: 300px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 200px;
+            background: white;
+            border: 1px dashed #cbd5e1;
+            border-radius: 4px;
+        }
+
+        canvas {
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>.brf to .edl 변환기</h1>
+    <p class="description">.brf 파일(BANA 코드)을 .edl 파일로 변환합니다.</p>
+
+    <div class="container">
+        <div class="form-group radio-group">
+            <span style="font-weight: 600; margin-right: 10px; color: #374151;">용지 크기:</span>
+            <label><input type="radio" name="paper-size" value="A4" checked> A4 (40칸 × 24줄)</label>
+            <label><input type="radio" name="paper-size" value="B5"> B5 (32칸 × 22줄)</label>
+        </div>
+        <div class="form-group">
+            <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+                <label for="braille-input" style="margin-bottom: 0;">점자 입력:</label>
+                <div style="font-size: 0.875rem;">
+                    <label for="brf-file" class="brf-upload-btn">.brf 파일 불러오기</label>
+                    <input type="file" id="brf-file" accept=".brf" style="display: none;">
+                </div>
+            </div>
+            <textarea id="braille-input" placeholder="⠓⠕⠇⠇⠕"></textarea>
+        </div>
+        <button id="convert-btn">좌표로 변환하기</button>
+
+        <div class="results-section" id="results" style="display: none;">
+            <div class="result-box">
+                <div
+                    style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid #d1d5db; padding-bottom: 8px;">
+                    <h3 style="margin: 0; border: none; padding: 0;">시각화 (미리보기)</h3>
+                    <button id="download-btn" style="padding: 6px 12px; font-size: 0.875rem;">.edl 저장</button>
+                </div>
+                <div class="canvas-wrapper">
+                    <canvas id="canvas"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const DOT_X_SPACING = 6;     // 한 점형 안에서 좌우 점(1,4) 간격
+        const DOT_Y_SPACING = 7;     // 한 점형 안에서 상하 점 간격
+        const CELL_X_SPACING = 9;    // 점형과 점형 사이 가로 간격
+        const CELL_Y_SPACING = 17;   // 점형과 줄 사이 세로 간격
+
+        // 6점자의 로컬 좌표 정의 (Top-Left 기준, Dot 1을 (0,0)으로 가정)
+        const dotLocalPositions = [
+            { x: 0, y: 0 },                                // Dot 1
+            { x: 0, y: DOT_Y_SPACING },                    // Dot 2
+            { x: 0, y: DOT_Y_SPACING * 2 },                // Dot 3
+            { x: DOT_X_SPACING, y: 0 },                    // Dot 4
+            { x: DOT_X_SPACING, y: DOT_Y_SPACING },        // Dot 5
+            { x: DOT_X_SPACING, y: DOT_Y_SPACING * 2 }     // Dot 6
+        ];
+
+        function toEdelNumber(n) {
+            // 빠른 정수/범위 체크 (비트연산으로 int32 강제 + 비교)
+            if ((n | 0) !== n || n < 0 || n > 744) {
+                throw new RangeError("n must be an integer in [0, 744]");
+            }
+
+            const tens = (n / 26) | 0;     // 0..28
+            const ones = n - tens * 26;    // 0..25
+
+            // 1의자리: 0 -> '@'(64), 1..25 -> 'A'(65)+ (ones-1) => 64+ones
+            const onesCode = 64 + ones;
+
+            // 10의자리:
+            // 0..25 -> '@'(64) + tens  => 64+tens  ( @, A..Y )
+            // 26 -> 'Z'(90)
+            // 27 -> '['(91)
+            // 28 -> '\'(92)
+            const tensCode = tens < 26 ? (64 + tens) : (90 + (tens - 26));
+
+            return String.fromCharCode(tensCode, onesCode);
+        }
+
+        let uploadedFileName = 'braille.edl';
+
+        document.getElementById('brf-file').addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Set the export filename
+            let baseName = file.name;
+            if (baseName.toLowerCase().endsWith('.brf')) {
+                baseName = baseName.slice(0, -4);
+            }
+            uploadedFileName = baseName + '.edl';
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                document.getElementById('braille-input').value = e.target.result;
+            };
+            reader.readAsText(file);
+
+            // Clear input so the same file can be selected again
+            event.target.value = '';
+        });
+
+        document.getElementById('convert-btn').addEventListener('click', () => {
+            const paperSize = document.querySelector('input[name="paper-size"]:checked').value;
+            const maxColsLimit = paperSize === 'A4' ? 40 : 32;
+            const maxRowsLimit = paperSize === 'A4' ? 24 : 22;
+
+            const inputElement = document.getElementById('braille-input');
+            const input = inputElement.value;
+            const rawLines = input.split('\n');
+            const lines = [];
+
+            // 칸수 초과 시 자동 줄바꿈 처리
+            for (let i = 0; i < rawLines.length; i++) {
+                const chars = Array.from(rawLines[i]);
+                if (chars.length === 0) {
+                    lines.push('');
+                    continue;
+                }
+                for (let j = 0; j < chars.length; j += maxColsLimit) {
+                    lines.push(chars.slice(j, j + maxColsLimit).join(''));
+                }
+            }
+
+            const coordinates = [];
+
+            let maxCol = 0;
+
+            lines.forEach((line, row) => {
+                // 줄수 제한 초과 시 무시
+                if (row >= maxRowsLimit) return;
+                if (line.length > maxCol) maxCol = line.length;
+
+                // 유니코드 서로게이트 쌍 등을 고려하여 배열로 분할
+                const chars = Array.from(line);
+
+                for (let col = 0; col < chars.length; col++) {
+                    const charCode = chars[col].codePointAt(0);
+
+                    // 점자 유니코드(U+2800 ~ U+28FF) 또는 BANA 코드 확인
+                    let offset = -1;
+                    if (charCode >= 0x2800 && charCode <= 0x28FF) {
+                        offset = charCode - 0x2800;
+                    } else {
+                        const BANA_CHARS = " a1b'k2l@cif/msp\"e3h9o6r^djg>ntq,*5<-u8v.%[$+x!&;:4\\0z7(_?w]#y)=";
+                        offset = BANA_CHARS.indexOf(chars[col].toLowerCase());
+                    }
+
+                    if (offset >= 0 && offset < 64) {
+                        // 1~6번 점 확인
+                        for (let dotIndex = 0; dotIndex < 6; dotIndex++) {
+                            if ((offset & (1 << dotIndex)) !== 0) {
+                                const localPos = dotLocalPositions[dotIndex];
+
+                                // 점형 간의 가로 배율 = 점형 가로폭(6) + 점형 간 간격(3) = 9
+                                // 줄 간의 세로 배율 = 점형 세로폭(14) + 줄 간 간격(17) = 31
+                                const cellX = col * (DOT_X_SPACING + CELL_X_SPACING);
+                                const cellY = row * (DOT_Y_SPACING * 2 + CELL_Y_SPACING);
+
+                                const x = cellX + localPos.x;
+                                const y = cellY + localPos.y;
+                                coordinates.push({
+                                    x,
+                                    y,
+                                    xe: toEdelNumber(x),
+                                    ye: toEdelNumber(y)
+                                });
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Y 먼저, 그다음 X 오름차순으로 정렬
+            coordinates.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+
+            let minX = 0;
+            let maxX = 0;
+            if (coordinates.length > 0) {
+                minX = Math.min(...coordinates.map(c => c.x));
+                maxX = Math.max(...coordinates.map(c => c.x));
+            }
+
+            const edelDataString = coordinates.map(c => c.xe + c.ye).join('');
+            const finalOutput = `EDEL${paperSize},${minX},${maxX}\n2${edelDataString}`;
+
+            document.getElementById('results').style.display = 'grid';
+            window.latestEdelData = finalOutput;
+
+            drawPreview(coordinates, maxCol, lines.length);
+        });
+
+        document.getElementById('download-btn').addEventListener('click', () => {
+            if (!window.latestEdelData) return;
+            const blob = new Blob([window.latestEdelData], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = uploadedFileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        function drawPreview(points, maxCols, numRows) {
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+
+            if (points.length === 0) {
+                canvas.width = 100;
+                canvas.height = 100;
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = '14px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('입력된 점자가 없습니다.', 50, 50);
+                return;
+            }
+
+            const padding = 20;
+            // 캔버스 크기는 내용물에 맞추되 스케일링을 위해 크게 그림
+            const scale = 2; // 선명한 렌더링을 위한 스케일 배수
+            const logicalWidth = Math.max(100, maxCols * (DOT_X_SPACING + CELL_X_SPACING) + padding * 2);
+            const logicalHeight = Math.max(100, numRows * (DOT_Y_SPACING * 2 + CELL_Y_SPACING) + padding * 2);
+
+            canvas.width = logicalWidth * scale;
+            canvas.height = logicalHeight * scale;
+            canvas.style.width = logicalWidth + 'px';
+            canvas.style.height = logicalHeight + 'px';
+
+            ctx.scale(scale, scale);
+            ctx.clearRect(0, 0, logicalWidth, logicalHeight);
+
+            ctx.fillStyle = '#1e3a8a';
+
+            points.forEach(p => {
+                ctx.beginPath();
+                // 시각화를 위해 점의 크기를 1.5 정도로 렌더링
+                ctx.arc(p.x + padding, p.y + padding, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+    </script>
+</body>
+
+</html>
