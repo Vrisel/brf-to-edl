@@ -342,7 +342,10 @@
                         offset = charCode - 0x2800;
                     } else {
                         const BANA_CHARS = " a1b'k2l@cif/msp\"e3h9o6r^djg>ntq,*5<-u8v.%[$+x!&;:4\\0z7(_?w]#y)=";
-                        offset = BANA_CHARS.indexOf(chars[col].toLowerCase());
+                        let bChar = chars[col].toLowerCase();
+                        const replacements = { '`': '@', '~': '^', '{': '[', '}': ']', '|': '\\' };
+                        bChar = replacements[bChar] || bChar;
+                        offset = BANA_CHARS.indexOf(bChar);
                     }
 
                     if (offset >= 0 && offset < 64) {
