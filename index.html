@@ -198,12 +198,18 @@
 <body>
     <h1>.brf to .edl 변환기</h1>
     <p class="description">.brf 파일(BANA 코드)을 .edl 파일로 변환합니다.</p>
+    <p class="description">
+        ※ 이미지를 brf에 삽입하기 위해서는, 이미지를 ascii 아트로 변환하는
+        <a href="https://vrisel.github.io/Braille-ASCII-Art-BANA/">Braille-ASCII-Art-BANA</a>를 사용해 보세요.
+    </p>
 
     <div class="container">
         <div class="form-group radio-group">
             <span style="font-weight: 600; margin-right: 10px; color: #374151;">용지 크기:</span>
-            <label><input type="radio" name="paper-size" value="A4" checked> A4 (40칸 × 24줄)</label>
-            <label><input type="radio" name="paper-size" value="B5"> B5 (32칸 × 22줄)</label>
+            <label><input type="radio" name="paper-size" value="A4p" checked> A4 ▯<br />(40칸 × 24줄)</label>
+            <label><input type="radio" name="paper-size" value="A4l"> A4 ▭<br />(50칸 × 19줄)</label>
+            <label><input type="radio" name="paper-size" value="B5p"> B5 ▮<br />(32칸 × 22줄)</label>
+            <label><input type="radio" name="paper-size" value="B5l"> B5 ▬<br />(46칸 × 16줄)</label>
         </div>
         <div class="form-group">
             <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
@@ -213,7 +219,7 @@
                     <input type="file" id="brf-file" accept=".brf" style="display: none;">
                 </div>
             </div>
-            <textarea id="braille-input" placeholder="⠓⠕⠇⠇⠕"></textarea>
+            <textarea id="braille-input" placeholder="BANA코드 입력" style="font-family: monospace;"></textarea>
         </div>
         <button id="convert-btn">좌표로 변환하기</button>
 
@@ -294,8 +300,9 @@
 
         document.getElementById('convert-btn').addEventListener('click', () => {
             const paperSize = document.querySelector('input[name="paper-size"]:checked').value;
-            const maxColsLimit = paperSize === 'A4' ? 40 : 32;
-            const maxRowsLimit = paperSize === 'A4' ? 24 : 22;
+            const alignment = paperSize[2];
+            const maxColsLimit = ({ 'A4p': 40, 'A4l': 50, 'B5p': 32, 'B5l': 46 })[paperSize];
+            const maxRowsLimit = ({ 'A4p': 24, 'A4l': 19, 'B5p': 22, 'B5l': 16 })[paperSize];
 
             const inputElement = document.getElementById('braille-input');
             const input = inputElement.value;
@@ -351,11 +358,16 @@
 
                                 const x = cellX + localPos.x;
                                 const y = cellY + localPos.y;
+
+                                const numX = ({ 'A4p': x, 'A4l': y, 'B5p': x, 'B5l': y })[paperSize]
+                                const numY = ({ 'A4p': y, 'A4l': 743 - x, 'B5p': y, 'B5l': 683 - x })[paperSize]
                                 coordinates.push({
                                     x,
                                     y,
-                                    xe: toEdelNumber(x),
-                                    ye: toEdelNumber(y)
+                                    numX,
+                                    numY,
+                                    xe: toEdelNumber(numX),
+                                    ye: toEdelNumber(numY)
                                 });
                             }
                         }
@@ -364,13 +376,13 @@
             });
 
             // Y 먼저, 그다음 X 오름차순으로 정렬
-            coordinates.sort((a, b) => a.y !== b.y ? a.y - b.y : a.x - b.x);
+            coordinates.sort((a, b) => a.numY !== b.numY ? a.numY - b.numY : a.numX - b.numX);
 
             let minX = 0;
             let maxX = 0;
             if (coordinates.length > 0) {
-                minX = Math.min(...coordinates.map(c => c.x));
-                maxX = Math.max(...coordinates.map(c => c.x));
+                minX = Math.min(...coordinates.map(c => c.numX));
+                maxX = Math.max(...coordinates.map(c => c.numX));
             }
 
             const edelDataString = coordinates.map(c => c.xe + c.ye).join('');
